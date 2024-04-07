@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Node.js Quiz</title>
+</head>
+<body>
+    <h1>Welcome to the Node.js Quiz!</h1>
+    <form id="quizForm">
+        <div id="questions"></div>
+        <button type="submit">Submit</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        fetch('/questions')
+            .then(response => response.json())
+            .then(questions => {
+                const form = document.getElementById('quizForm');
+                const questionsDiv = document.getElementById('questions');
+                questions.forEach((question, index) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.innerHTML = `
+                        <p>${index + 1}. ${question.question}</p>
+                        ${question.options.map((option, idx) => `
+                            <div>
+                                <input type="radio" id="q${index}-option${idx}" name="answer${index}" value="${option}">
+                                <label for="q${index}-option${idx}">${option}</label>
+                            </div>
+                        `).join('')}
+                    `;
+                    questionsDiv.appendChild(questionDiv);
+                });
+
+                form.addEventListener('submit', event => {
+                    event.preventDefault();
+                    const formData = new FormData(form);
+                    const answers = {};
+                    formData.forEach((value, key) => {
+                        answers[key.substring(6)] = value;
+                    });
+                    fetch('/submit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(answers)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        const resultDiv = document.getElementById('result');
+                        resultDiv.innerHTML = `<p>Your score is: ${data.score}</p>`;
+                    });
+                });
+            });
+    </script>
+</body>
+</html>
